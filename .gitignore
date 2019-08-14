@@ -13,7 +13,7 @@
 *.o
 
 # External Libraries Folder (in order to compile in place)
-lib/
+external
 
 # Compiled Dynamic libraries
 *.so
