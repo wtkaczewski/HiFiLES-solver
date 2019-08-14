@@ -274,6 +274,8 @@ public:
   int perturb_ic;
 
   double time, rk_time;
+
+  int gpusPerNode;
 };
 
 /*! \class fileReader

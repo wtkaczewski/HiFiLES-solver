@@ -328,6 +328,7 @@ void input::read_input_file(string fileName, int rank)
   opts.getVectorValueOptional("x_coeffs",x_coeffs);
   opts.getVectorValueOptional("y_coeffs",y_coeffs);
   opts.getVectorValueOptional("z_coeffs",z_coeffs);
+  opts.getScalarValue("gpusPerNode",gpusPerNode,0);
 }
 
 void input::setup(char* fileNameC, int rank)
