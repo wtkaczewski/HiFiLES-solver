@@ -48,7 +48,6 @@
 
 #ifdef _MPI
 #include "mpi.h"
-#include "metis.h"
 #include "parmetis.h"
 #endif
 
