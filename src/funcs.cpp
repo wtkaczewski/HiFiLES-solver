@@ -44,7 +44,7 @@ extern "C"
 #endif
 
 #include "../include/funcs.h"
-#include "../include/array.h"
+#include "../include/hf_array.h"
 #include "../include/cubature_1d.h"
 #include "../include/global.h"
 
@@ -54,7 +54,7 @@ using namespace std;
 
 // evaluate lagrange basis
 
-double eval_lagrange(double in_r, int in_mode, array<double>& in_loc_pts)
+double eval_lagrange(double in_r, int in_mode, hf_array<double>& in_loc_pts)
 {
   int i;
 
@@ -75,7 +75,7 @@ double eval_lagrange(double in_r, int in_mode, array<double>& in_loc_pts)
 
 // evaluate derivative of lagrange basis
 
-double eval_d_lagrange(double in_r, int in_mode, array<double>& in_loc_pts)
+double eval_d_lagrange(double in_r, int in_mode, hf_array<double>& in_loc_pts)
 {
   int i,j;
 
@@ -112,7 +112,7 @@ double eval_d_lagrange(double in_r, int in_mode, array<double>& in_loc_pts)
 
 // evaluate second derivative of lagrange basis
 
-double eval_dd_lagrange(double in_r, int in_mode, array<double>& in_loc_pts)
+double eval_dd_lagrange(double in_r, int in_mode, hf_array<double>& in_loc_pts)
 {
   int i,j,k;
 
@@ -254,7 +254,7 @@ double eval_d_ofr_1d(double in_r, int in_mode, int in_order)
 	double dtemp_0;
 	double cVal, aP, eta;
 
-	array<double> loc_zeros_gL(in_order+2), loc_zeros_gR(in_order+2);
+	hf_array<double> loc_zeros_gL(in_order+2), loc_zeros_gR(in_order+2);
 
 	// Append end points
 	loc_zeros_gL(0) = -1.0;
@@ -368,25 +368,25 @@ double eval_d_oesfr_1d(double in_r, int in_mode, int in_order)
 	return dtemp_0;
 }
 
-void get_opp_3_tri(array<double>& opp_3, array<double>& loc_upts_tri, array<double>& loc_1d_fpts, array<double>& vandermonde_tri, array<double>& inv_vandermonde_tri, int n_upts_per_tri, int order, double c_tri, int vcjh_scheme_tri)
+void get_opp_3_tri(hf_array<double>& opp_3, hf_array<double>& loc_upts_tri, hf_array<double>& loc_1d_fpts, hf_array<double>& vandermonde_tri, hf_array<double>& inv_vandermonde_tri, int n_upts_per_tri, int order, double c_tri, int vcjh_scheme_tri)
 {
 
-  array<double> Filt(n_upts_per_tri,n_upts_per_tri);
-  array<double> opp_3_dg(n_upts_per_tri, 3*(order+1));
-  array<double> m_temp;
+  hf_array<double> Filt(n_upts_per_tri,n_upts_per_tri);
+  hf_array<double> opp_3_dg(n_upts_per_tri, 3*(order+1));
+  hf_array<double> m_temp;
 
   compute_filt_matrix_tri(Filt,vandermonde_tri,inv_vandermonde_tri,n_upts_per_tri,order,c_tri,vcjh_scheme_tri,loc_upts_tri);
 
   get_opp_3_dg(opp_3_dg, loc_upts_tri, loc_1d_fpts, n_upts_per_tri, order);
-  m_temp = mult_arrays(Filt,opp_3_dg);
-  opp_3 = array<double> (m_temp);
+  m_temp = mult_hf_arrays(Filt,opp_3_dg);
+  opp_3 = hf_array<double> (m_temp);
 }
 
-void get_opp_3_dg(array<double>& opp_3_dg, array<double>& loc_upts_tri, array<double>& loc_1d_fpts, int n_upts_per_tri, int order)
+void get_opp_3_dg(hf_array<double>& opp_3_dg, hf_array<double>& loc_upts_tri, hf_array<double>& loc_1d_fpts, int n_upts_per_tri, int order)
 {
 
   int i,j,k;
-  array<double> loc(2);
+  hf_array<double> loc(2);
 
   for(i=0;i<3*(order+1);i++)
     {
@@ -406,16 +406,16 @@ void get_opp_3_dg(array<double>& opp_3_dg, array<double>& loc_upts_tri, array<do
 }
 
 // Compute a 1D modal filter matrix, given Vandermonde matrix and inverse
-void compute_modal_filter_1d(array <double>& filter_upts, array<double>& vandermonde, array<double>& inv_vandermonde, int N, int order)
+void compute_modal_filter_1d(hf_array <double>& filter_upts, hf_array<double>& vandermonde, hf_array<double>& inv_vandermonde, int N, int order)
 {
 	int i,j,ind=0;
 	double Cp=0.1;     // filter strength coeff.
 	double p=order;    // filter exponent
 	double alpha, eta;
-	array <double> modal(N,N), mtemp(N,N);
+	hf_array <double> modal(N,N), mtemp(N,N);
 
-	zero_array(modal);
-	zero_array(filter_upts);
+	zero_hf_array(modal);
+	zero_hf_array(filter_upts);
 
   // Exponential filter (SVV method) (similar to Meister et al 2009)
 
@@ -448,23 +448,23 @@ void compute_modal_filter_1d(array <double>& filter_upts, array<double>& vanderm
 
     #else // inefficient matrix multiplication
 
-	mtemp = mult_arrays(inv_vandermonde,modal);
-	filter_upts = mult_arrays(mtemp,vandermonde);
+	mtemp = mult_hf_arrays(inv_vandermonde,modal);
+	filter_upts = mult_hf_arrays(mtemp,vandermonde);
 
 	#endif
 }
 
 // Compute a modal filter matrix for a triangular element, given Vandermonde matrix and inverse
-void compute_modal_filter_tri(array <double>& filter_upts, array<double>& vandermonde, array<double>& inv_vandermonde, int N, int order)
+void compute_modal_filter_tri(hf_array <double>& filter_upts, hf_array<double>& vandermonde, hf_array<double>& inv_vandermonde, int N, int order)
 {
 	int i,j,ind=0;
 	double Cp=0.1;     // Dubiner SVV filter strength coeff.
 	double p=order;    // filter exponent
 	double alpha, eta;
-	array <double> modal(N,N), mtemp(N,N);
+	hf_array <double> modal(N,N), mtemp(N,N);
 
-	zero_array(modal);
-	zero_array(filter_upts);
+	zero_hf_array(modal);
+	zero_hf_array(filter_upts);
 
   // Exponential filter (SVV method) (similar to Meister et al 2009)
 
@@ -499,23 +499,23 @@ void compute_modal_filter_tri(array <double>& filter_upts, array<double>& vander
 
 	#else // inefficient matrix multiplication
 
-	mtemp = mult_arrays(inv_vandermonde,modal);
-	filter_upts = mult_arrays(mtemp,vandermonde);
+	mtemp = mult_hf_arrays(inv_vandermonde,modal);
+	filter_upts = mult_hf_arrays(mtemp,vandermonde);
 
 	#endif
 }
 
 // Compute a modal filter matrix for a tetrahedral element, given Vandermonde matrix and inverse
-void compute_modal_filter_tet(array <double>& filter_upts, array<double>& vandermonde, array<double>& inv_vandermonde, int N, int order)
+void compute_modal_filter_tet(hf_array <double>& filter_upts, hf_array<double>& vandermonde, hf_array<double>& inv_vandermonde, int N, int order)
 {
 	int i,j,k,ind=0;
 	double Cp=0.1;     // Dubiner SVV filter strength coeff.
 	double p=order;    // filter exponent
 	double alpha, eta;
-	array <double> modal(N,N), mtemp(N,N);
+	hf_array <double> modal(N,N), mtemp(N,N);
 
-	zero_array(modal);
-	zero_array(filter_upts);
+	zero_hf_array(modal);
+	zero_hf_array(filter_upts);
 
   // Exponential filter (SVV method) (similar to Meister et al 2009)
 
@@ -552,13 +552,13 @@ void compute_modal_filter_tet(array <double>& filter_upts, array<double>& vander
 
   #else // inefficient matrix multiplication
 
-  mtemp = mult_arrays(inv_vandermonde,modal);
-  filter_upts = mult_arrays(mtemp,vandermonde);
+  mtemp = mult_hf_arrays(inv_vandermonde,modal);
+  filter_upts = mult_hf_arrays(mtemp,vandermonde);
 
   #endif
 }
 
-void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri, array<double>& inv_vandermonde_tri, int n_upts_tri, int order, double c_tri, int vcjh_scheme_tri, array<double>& loc_upts_tri)
+void compute_filt_matrix_tri(hf_array<double>& Filt, hf_array<double>& vandermonde_tri, hf_array<double>& inv_vandermonde_tri, int n_upts_tri, int order, double c_tri, int vcjh_scheme_tri, hf_array<double>& loc_upts_tri)
 {
 
   // -----------------
@@ -568,20 +568,20 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
   double c_plus;
   double c_plus_1d, c_sd_1d, c_hu_1d;
 
-  array<double> c_coeff(order+1);
-  array<double> mtemp_0, mtemp_1, mtemp_2;
-  array<double> K(n_upts_tri,n_upts_tri);
-  array<double> Identity(n_upts_tri,n_upts_tri);
-  array<double> Filt_dubiner(n_upts_tri,n_upts_tri);
-  array<double> Dr(n_upts_tri,n_upts_tri);
-  array<double> Ds(n_upts_tri,n_upts_tri);
-  array<double> tempr(n_upts_tri,n_upts_tri);
-  array<double> temps(n_upts_tri,n_upts_tri);
-  array<double> D_high_order_trans(n_upts_tri,n_upts_tri);
-  array<double> vandermonde_tri_trans(n_upts_tri,n_upts_tri);
+  hf_array<double> c_coeff(order+1);
+  hf_array<double> mtemp_0, mtemp_1, mtemp_2;
+  hf_array<double> K(n_upts_tri,n_upts_tri);
+  hf_array<double> Identity(n_upts_tri,n_upts_tri);
+  hf_array<double> Filt_dubiner(n_upts_tri,n_upts_tri);
+  hf_array<double> Dr(n_upts_tri,n_upts_tri);
+  hf_array<double> Ds(n_upts_tri,n_upts_tri);
+  hf_array<double> tempr(n_upts_tri,n_upts_tri);
+  hf_array<double> temps(n_upts_tri,n_upts_tri);
+  hf_array<double> D_high_order_trans(n_upts_tri,n_upts_tri);
+  hf_array<double> vandermonde_tri_trans(n_upts_tri,n_upts_tri);
 
-  array<array <double> > D_high_order;
-  array<array <double> > D_T_D;
+  hf_array<hf_array <double> > D_high_order;
+  hf_array<hf_array <double> > D_T_D;
 
   // 1D prep
   ap = 1./pow(2.0,order)*factorial(2*order)/ (factorial(order)*factorial(order));
@@ -650,23 +650,23 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
     }
 
   //Convert to nodal derivatives
-  Dr = mult_arrays(tempr,inv_vandermonde_tri);
-  Ds = mult_arrays(temps,inv_vandermonde_tri);
+  Dr = mult_hf_arrays(tempr,inv_vandermonde_tri);
+  Ds = mult_hf_arrays(temps,inv_vandermonde_tri);
 
   //Create identity matrix
-  zero_array(Identity);
+  zero_hf_array(Identity);
 
   for (int i=0;i<n_upts_tri;++i)
     Identity(i,i) = 1.;
 
-  // Set array with binomial coefficients multiplied by value of c
+  // Set hf_array with binomial coefficients multiplied by value of c
   for(int k=0; k<(order+1);k++) {
       c_coeff(k) = (1./n_upts_tri)*(factorial(order)/( factorial(k)*factorial(order-k) ));
       //cout << "k=" << k << "coeff= " << c_coeff(k) << endl;
     }
 
   // Initialize K to zero
-  zero_array(K);
+  zero_hf_array(K);
 
   // Compute D_transpose*D
   D_high_order.setup(order+1);
@@ -675,22 +675,22 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
   for (int k=0;k<(order+1);k++)
     {
       int m = order-k;
-      D_high_order(k) = array<double> (Identity);
+      D_high_order(k) = hf_array<double> (Identity);
       for (int k2=0;k2<k;k2++)
-        D_high_order(k) = mult_arrays(D_high_order(k),Ds);
+        D_high_order(k) = mult_hf_arrays(D_high_order(k),Ds);
       for (int m2=0;m2<m;m2++)
-        D_high_order(k) = mult_arrays(D_high_order(k),Dr);
+        D_high_order(k) = mult_hf_arrays(D_high_order(k),Dr);
       //cout << "k=" << k << endl;
       //cout<<"D_high_order(k)"<<endl;
       //D_high_order(k).print();
       //cout << endl;
 
-      D_high_order_trans = transpose_array(D_high_order(k));
-      D_T_D(k) = mult_arrays(D_high_order_trans,D_high_order(k));
+      D_high_order_trans = transpose_hf_array(D_high_order(k));
+      D_T_D(k) = mult_hf_arrays(D_high_order_trans,D_high_order(k));
 
-      //mtemp_2 = transpose_array(vandermonde_tri);
-      //mtemp_2 = mult_arrays(mtemp_2,D_high_order(k));
-      //mtemp_2 = mult_arrays(mtemp_2,vandermonde_tri);
+      //mtemp_2 = transpose_hf_array(vandermonde_tri);
+      //mtemp_2 = mult_hf_arrays(mtemp_2,D_high_order(k));
+      //mtemp_2 = mult_hf_arrays(mtemp_2,vandermonde_tri);
       //cout<<"V^T*D_high_order(k)*V"<<endl;
       //mtemp_2.print();
       //cout << endl;
@@ -705,20 +705,20 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
     }
 
   //inverse mass matrix
-  vandermonde_tri_trans = transpose_array(vandermonde_tri);
-  mtemp_0 = mult_arrays(vandermonde_tri,vandermonde_tri_trans);
+  vandermonde_tri_trans = transpose_hf_array(vandermonde_tri);
+  mtemp_0 = mult_hf_arrays(vandermonde_tri,vandermonde_tri_trans);
 
   //filter
-  mtemp_1 = array<double>(mtemp_0);
-  mtemp_1 = mult_arrays(mtemp_1,K);
+  mtemp_1 = hf_array<double>(mtemp_0);
+  mtemp_1 = mult_hf_arrays(mtemp_1,K);
 
   for (int i=0;i<n_upts_tri;i++)
     for (int j=0;j<n_upts_tri;j++)
       mtemp_1(i,j) += Identity(i,j);
 
-  Filt = inv_array(mtemp_1);
-  Filt_dubiner = mult_arrays(inv_vandermonde_tri,Filt);
-  Filt_dubiner = mult_arrays(Filt_dubiner,vandermonde_tri);
+  Filt = inv_hf_array(mtemp_1);
+  Filt_dubiner = mult_hf_arrays(inv_vandermonde_tri,Filt);
+  Filt_dubiner = mult_hf_arrays(Filt_dubiner,vandermonde_tri);
 
   //cout << "Filt" << endl;
   //Filt.print();
@@ -790,8 +790,8 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
     }
   }
 
-  Filt = mult_arrays(vandermonde_tri,Filt_dubiner);
-  Filt = mult_arrays(Filt,inv_vandermonde_tri);
+  Filt = mult_hf_arrays(vandermonde_tri,Filt_dubiner);
+  Filt = mult_hf_arrays(Filt,inv_vandermonde_tri);
 
   cout << "Filt_dubiner_diag" << endl;
   Filt_dubiner.print();
@@ -803,7 +803,7 @@ void compute_filt_matrix_tri(array<double>& Filt, array<double>& vandermonde_tri
 }
 
 
-double eval_div_dg_tri(array<double> &in_loc , int in_edge, int in_edge_fpt, int in_order, array<double> &in_loc_fpts_1d)
+double eval_div_dg_tri(hf_array<double> &in_loc , int in_edge, int in_edge_fpt, int in_order, hf_array<double> &in_loc_fpts_1d)
 {
   int n_upts_tri = (in_order+1)*(in_order+2)/2;
 
@@ -811,10 +811,10 @@ double eval_div_dg_tri(array<double> &in_loc , int in_edge, int in_edge_fpt, int
   double integral, edge_length, gdotn_at_cubpt;
   double div_vcjh_basis;
 
-  array<double> mtemp_0((in_order+1),(in_order+1));
-  array<double> gdotn((in_order+1),1);
-  array<double> coeff_gdotn((in_order+1),1);
-  array<double> coeff_divg(n_upts_tri,1);
+  hf_array<double> mtemp_0((in_order+1),(in_order+1));
+  hf_array<double> gdotn((in_order+1),1);
+  hf_array<double> coeff_gdotn((in_order+1),1);
+  hf_array<double> coeff_divg(n_upts_tri,1);
 
   cubature_1d cub1d(10);  // TODO: CHECK STRENGTH
 
@@ -845,8 +845,8 @@ double eval_div_dg_tri(array<double> &in_loc , int in_edge, int in_edge_fpt, int
         mtemp_0(i,j) = eval_jacobi(t,0,0,j);
     }
 
-  mtemp_0 = inv_array(mtemp_0);
-  coeff_gdotn = mult_arrays(mtemp_0,gdotn);
+  mtemp_0 = inv_hf_array(mtemp_0);
+  coeff_gdotn = mult_hf_arrays(mtemp_0,gdotn);
 
   // 2. Perform the edge integrals to obtain coefficients sigma_i
   for (int i=0;i<n_upts_tri;i++)
@@ -892,8 +892,8 @@ double eval_div_dg_tri(array<double> &in_loc , int in_edge, int in_edge_fpt, int
 
 }
 
-// get intel mkl csr 4 array format
-void array_to_mklcsr(array<double>& in_array, array<double>& out_data, array<int>& out_cols, array<int>& out_b, array<int>& out_e)
+// get intel mkl csr 4 hf_array format
+void hf_array_to_mklcsr(hf_array<double>& in_hf_array, hf_array<double>& out_data, hf_array<int>& out_cols, hf_array<int>& out_b, hf_array<int>& out_e)
 {
   int i,j;
 
@@ -902,14 +902,14 @@ void array_to_mklcsr(array<double>& in_array, array<double>& out_data, array<int
   int pos=0;
   int new_row=0;
 
-  array<double> temp_data;
-  array<int> temp_cols, temp_b, temp_e;
+  hf_array<double> temp_data;
+  hf_array<int> temp_cols, temp_b, temp_e;
 
-  for(j=0;j<in_array.get_dim(0);j++)
+  for(j=0;j<in_hf_array.get_dim(0);j++)
     {
-      for(i=0;i<in_array.get_dim(1);i++)
+      for(i=0;i<in_hf_array.get_dim(1);i++)
         {
-          if((in_array(j,i)*in_array(j,i))>tol)
+          if((in_hf_array(j,i)*in_hf_array(j,i))>tol)
             {
               nnz++;
             }
@@ -918,18 +918,18 @@ void array_to_mklcsr(array<double>& in_array, array<double>& out_data, array<int
 
   temp_data.setup(nnz);
   temp_cols.setup(nnz);
-  temp_b.setup(in_array.get_dim(0));
-  temp_e.setup(in_array.get_dim(0));
+  temp_b.setup(in_hf_array.get_dim(0));
+  temp_e.setup(in_hf_array.get_dim(0));
 
   pos=0;
 
-  for(j=0;j<in_array.get_dim(0);j++)
+  for(j=0;j<in_hf_array.get_dim(0);j++)
     {
-      for(i=0;i<in_array.get_dim(1);i++)
+      for(i=0;i<in_hf_array.get_dim(1);i++)
         {
-          if((in_array(j,i)*in_array(j,i))>tol)
+          if((in_hf_array(j,i)*in_hf_array(j,i))>tol)
             {
-              temp_data(pos)=in_array(j,i);
+              temp_data(pos)=in_hf_array(j,i);
               temp_cols(pos)=i+1;
 
               if(new_row==0)
@@ -958,13 +958,13 @@ void array_to_mklcsr(array<double>& in_array, array<double>& out_data, array<int
   out_e=temp_e;
 }
 
-void array_to_ellpack(array<double>& in_array, array<double>& out_data, array<int>& out_cols, int& nnz_per_row)
+void hf_array_to_ellpack(hf_array<double>& in_hf_array, hf_array<double>& out_data, hf_array<int>& out_cols, int& nnz_per_row)
 {
 
   double zero_tol = 1.0e-12;
 
-  int n_rows = in_array.get_dim(0);
-  int n_cols = in_array.get_dim(1);
+  int n_rows = in_hf_array.get_dim(0);
+  int n_cols = in_hf_array.get_dim(1);
   nnz_per_row = 0;
   int temp;
 
@@ -973,8 +973,8 @@ void array_to_ellpack(array<double>& in_array, array<double>& out_data, array<in
       temp = 0;
       for (int j=0;j<n_cols;j++)
         {
-          //cout << "in_array=" << in_array(i,j) << endl;
-          if (abs(in_array(i,j)) >= zero_tol)
+          //cout << "in_hf_array=" << in_hf_array(i,j) << endl;
+          if (abs(in_hf_array(i,j)) >= zero_tol)
             temp++;
         }
       //cout << "temp= " << temp << endl;
@@ -998,10 +998,10 @@ void array_to_ellpack(array<double>& in_array, array<double>& out_data, array<in
       int count=0;
       for (int j=0;j<n_cols;j++)
         {
-          if ( abs(in_array(i,j)) >= zero_tol)
+          if ( abs(in_hf_array(i,j)) >= zero_tol)
             {
               index=i+count*n_rows;
-              out_data(index) = in_array(i,j);
+              out_data(index) = in_hf_array(i,j);
               out_cols(index) = j;
               count++;
             }
@@ -1012,9 +1012,9 @@ void array_to_ellpack(array<double>& in_array, array<double>& out_data, array<in
 }
 
 
-array<double> rs_to_ab(double in_r, double in_s)
+hf_array<double> rs_to_ab(double in_r, double in_s)
 {
-  array<double> ab(2);
+  hf_array<double> ab(2);
 
   if(in_s==1.0) // to avoid singularity
     {
@@ -1032,17 +1032,17 @@ array<double> rs_to_ab(double in_r, double in_s)
 
 #ifdef _GPU
 /*
-void array_to_cusparse_csr(array<double>& in_array, cusparseHybMat_t &hyb_array, cusparseHandle_t& handle)
+void hf_array_to_cusparse_csr(hf_array<double>& in_hf_array, cusparseHybMat_t &hyb_hf_array, cusparseHandle_t& handle)
 {
-  int n_rows = in_array.get_dim(0);
-  int n_cols = in_array.get_dim(1);
+  int n_rows = in_hf_array.get_dim(0);
+  int n_cols = in_hf_array.get_dim(1);
 
   cout << "Converting to hybrid format" << endl;
 
-  array<int> nnz_per_row(n_rows);
+  hf_array<int> nnz_per_row(n_rows);
   int nnzTotalDevHostPtr;
 
-  //cusparseCreateHybMat(&hyb_array);
+  //cusparseCreateHybMat(&hyb_hf_array);
   cusparseMatDescr_t mat_description;
   cusparseStatus_t status;
 
@@ -1055,18 +1055,18 @@ void array_to_cusparse_csr(array<double>& in_array, cusparseHybMat_t &hyb_array,
   cusparseSetMatType(mat_description,CUSPARSE_MATRIX_TYPE_GENERAL);
   cusparseSetMatIndexBase(mat_description,CUSPARSE_INDEX_BASE_ZERO);
 
-  cusparseDnnz(handle, CUSPARSE_DIRECTION_ROW, n_rows, n_cols,mat_description,in_array.get_ptr_gpu(),n_rows,nnz_per_row.get_ptr_cpu(),&nnzTotalDevHostPtr);
+  cusparseDnnz(handle, CUSPARSE_DIRECTION_ROW, n_rows, n_cols,mat_description,in_hf_array.get_ptr_gpu(),n_rows,nnz_per_row.get_ptr_cpu(),&nnzTotalDevHostPtr);
 
-  const double* gpu_ptr = in_array.get_ptr_gpu();
+  const double* gpu_ptr = in_hf_array.get_ptr_gpu();
 
-  cusparseDdense2csr(handle,n_rows,n_cols,mat_description,gpu_ptr,n_rows,nnz_per_row.get_ptr_cpu(),hyb_array,NULL,CUSPARSE_HYB_PARTITION_AUTO);
+  cusparseDdense2csr(handle,n_rows,n_cols,mat_description,gpu_ptr,n_rows,nnz_per_row.get_ptr_cpu(),hyb_hf_array,NULL,CUSPARSE_HYB_PARTITION_AUTO);
 }
 */
 #endif
 
-array<double> rst_to_abc(double in_r, double in_s, double in_t) // CHECK (PASSING)
+hf_array<double> rst_to_abc(double in_r, double in_s, double in_t) // CHECK (PASSING)
 {
-  array<double> abc(3);
+  hf_array<double> abc(3);
 
   if (in_s + in_t == 0.0)
     {
@@ -1198,7 +1198,7 @@ double eval_dubiner_basis_2d(double in_r, double in_s, int in_mode, int in_basis
       int i,j,k;
       int mode;
       double jacobi_0, jacobi_1;
-      array<double> ab;
+      hf_array<double> ab;
 
       ab=rs_to_ab(in_r,in_s);
 
@@ -1237,7 +1237,7 @@ double eval_dr_dubiner_basis_2d(double in_r, double in_s, int in_mode, int in_ba
       int i,j,k;
       int mode;
       double jacobi_0, jacobi_1;
-      array<double> ab;
+      hf_array<double> ab;
 
       ab=rs_to_ab(in_r,in_s);
 
@@ -1288,7 +1288,7 @@ double eval_ds_dubiner_basis_2d(double in_r, double in_s, int in_mode, int in_ba
       int i,j,k;
       int mode;
       double jacobi_0, jacobi_1, jacobi_2, jacobi_3, jacobi_4;
-      array<double> ab;
+      hf_array<double> ab;
 
       ab=rs_to_ab(in_r,in_s);
 
@@ -1341,7 +1341,7 @@ double eval_dubiner_basis_3d(double in_r, double in_s, double in_t, int in_mode,
       int i,j,k,m,n;
       int mode;
       double jacobi_0, jacobi_1,jacobi_2;
-      array<double> abc;
+      hf_array<double> abc;
 
       abc=rst_to_abc(in_r,in_s,in_t);
 
@@ -1389,7 +1389,7 @@ double eval_grad_dubiner_basis_3d(double in_r, double in_s, double in_t, int in_
     {
       int i,j,k,m,n;
       int mode;
-      array<double> abc;
+      hf_array<double> abc;
 
       abc=rst_to_abc(in_r,in_s,in_t);
 
@@ -1551,8 +1551,8 @@ int compare_ints(const void * a, const void *b)
 }
 
 
-// Method that searches a value in a sorted array without repeated entries and returns position in array
-int index_locate_int(int value, int* array, int size)
+// Method that searches a value in a sorted hf_array without repeated entries and returns position in hf_array
+int index_locate_int(int value, int* hf_array, int size)
 {
   int ju,jm,jl;
   int ascnd;
@@ -1560,19 +1560,19 @@ int index_locate_int(int value, int* array, int size)
   jl = 0;
   ju = size-1;
 
-  if (array[ju] <= array[0] && ju!=0)
+  if (hf_array[ju] <= hf_array[0] && ju!=0)
     {
-      cout << "ERROR, array not sorted, exiting" << endl;
+      cout << "ERROR, hf_array not sorted, exiting" << endl;
       cout << "size= " << size << endl;
-      cout << "array[0] = " << array[0] << endl;
-      cout << "array[size-1] = " << array[ju] << endl;
+      cout << "hf_array[0] = " << hf_array[0] << endl;
+      cout << "hf_array[size-1] = " << hf_array[ju] << endl;
       exit(1);
     }
 
   while(ju-jl > 1)
     {
       jm = (ju+jl) >> 1;
-      if (value>=array[jm])
+      if (value>=hf_array[jm])
         {
           jl=jm;
         }
@@ -1582,15 +1582,15 @@ int index_locate_int(int value, int* array, int size)
         }
     }
 
-  if (value == array[0])
+  if (value == hf_array[0])
     {
       return 0;
     }
-  else if (value == array[size-1])
+  else if (value == hf_array[size-1])
     {
       return size-1;
     }
-  else if (value == array[jl])
+  else if (value == hf_array[jl])
     {
       return jl;
     }
@@ -1600,9 +1600,9 @@ int index_locate_int(int value, int* array, int size)
     }
 }
 
-void eval_isentropic_vortex(array<double>& pos, double time, double& rho, double& vx, double& vy, double& vz, double& p, int n_dims)
+void eval_isentropic_vortex(hf_array<double>& pos, double time, double& rho, double& vx, double& vy, double& vz, double& p, int n_dims)
 {
-  array<double> relative_pos(n_dims);
+  hf_array<double> relative_pos(n_dims);
 
   double gamma=1.4;
   /*
@@ -1659,10 +1659,10 @@ void eval_isentropic_vortex(array<double>& pos, double time, double& rho, double
 }
 
 
-void eval_sine_wave_single(array<double>& pos, array<double>& wave_speed, double diff_coeff, double time, double& rho, array<double>& grad_rho, int n_dims)
+void eval_sine_wave_single(hf_array<double>& pos, hf_array<double>& wave_speed, double diff_coeff, double time, double& rho, hf_array<double>& grad_rho, int n_dims)
 {
 
-  array<double> relative_pos(n_dims);
+  hf_array<double> relative_pos(n_dims);
   relative_pos(0) = pos(0) - wave_speed(0)*time;
   relative_pos(1) = pos(1) - wave_speed(1)*time;
   if (n_dims==3)
@@ -1686,10 +1686,10 @@ void eval_sine_wave_single(array<double>& pos, array<double>& wave_speed, double
 }
 
 
-void eval_sine_wave_group(array<double>& pos, array<double>& wave_speed, double diff_coeff, double time, double& rho, array<double>& grad_rho, int n_dims)
+void eval_sine_wave_group(hf_array<double>& pos, hf_array<double>& wave_speed, double diff_coeff, double time, double& rho, hf_array<double>& grad_rho, int n_dims)
 {
 
-  array<double> relative_pos(n_dims);
+  hf_array<double> relative_pos(n_dims);
   relative_pos(0) = pos(0) - wave_speed(0)*time;
   relative_pos(1) = pos(1) - wave_speed(1)*time;
   if (n_dims==3)
@@ -1714,10 +1714,10 @@ void eval_sine_wave_group(array<double>& pos, array<double>& wave_speed, double 
 }
 
 
-void eval_sphere_wave(array<double>& pos, array<double>& wave_speed, double time, double& rho, int n_dims)
+void eval_sphere_wave(hf_array<double>& pos, hf_array<double>& wave_speed, double time, double& rho, int n_dims)
 {
 
-  array<double> relative_pos(n_dims);
+  hf_array<double> relative_pos(n_dims);
   relative_pos(0) = pos(0) - wave_speed(0)*time;
   relative_pos(1) = pos(1) - wave_speed(1)*time;
   relative_pos(2) = pos(2) - wave_speed(2)*time;
@@ -1747,7 +1747,7 @@ int factorial(int in_n)
     }
 }
 
-void eval_couette_flow(array<double>& pos, double in_gamma, double in_R_ref, double in_u_wall, double in_T_wall, double in_p_bound, double in_prandtl, double time, double& ene, array<double>& grad_ene, int n_dims)
+void eval_couette_flow(hf_array<double>& pos, double in_gamma, double in_R_ref, double in_u_wall, double in_T_wall, double in_p_bound, double in_prandtl, double time, double& ene, hf_array<double>& grad_ene, int n_dims)
 {
   double x,y,z;
 
@@ -1831,7 +1831,7 @@ void eval_couette_flow(array<double>& pos, double in_gamma, double in_R_ref, dou
 
 // Set initial momentum as up to 4th order polynomial in each direction
 // TODO: allow mixed terms e.g. xy, yz^2
-void eval_poly_ic(array<double>& pos, double rho, array<double>& ics, int n_dims)
+void eval_poly_ic(hf_array<double>& pos, double rho, hf_array<double>& ics, int n_dims)
 {
   // HACK: do not use profile outside the vertical bounds of the inlet in periodic hill case
   if(pos(1)<1.0)
@@ -1844,7 +1844,7 @@ void eval_poly_ic(array<double>& pos, double rho, array<double>& ics, int n_dims
   // Take N user-specified coefficients {a,b,c,...,n} to construct a polynomial of the form
   // u = a + bx + cx^2 + ... + nx^N (1D)
   // In 2D and 3D, add extra coeffs for mixed terms xy, xyz, x^2y etc.
-  array <double> c(13);
+  hf_array <double> c(13);
 
   for(int i=0;i<13;++i)
     c(i) = run_input.x_coeffs(i);
@@ -1870,7 +1870,7 @@ void eval_poly_ic(array<double>& pos, double rho, array<double>& ics, int n_dims
 
 /*! Functions used in evaluation of shape functions and its 1st and 2nd derivatives
 BEGIN:*/
-array<double> convol(array<double> & polynomial1, array<double> & polynomial2)
+hf_array<double> convol(hf_array<double> & polynomial1, hf_array<double> & polynomial2)
 {
   // Accepts only row vectors that represent polynomials
   // Get lengths
@@ -1878,7 +1878,7 @@ array<double> convol(array<double> & polynomial1, array<double> & polynomial2)
   int sizep2 = polynomial2.get_dim(1);
 
   // Allocate memory for result of multiplication of polynomials
-  array<double> polynomial3;
+  hf_array<double> polynomial3;
   polynomial3.setup(1,sizep1 + sizep2 - 1);
   polynomial3.initialize_to_zero();
 
@@ -1893,7 +1893,7 @@ array<double> convol(array<double> & polynomial1, array<double> & polynomial2)
   return polynomial3;
 }
 
-array<double> LagrangeP(int order, int node, array<double> & subs)
+hf_array<double> LagrangeP(int order, int node, hf_array<double> & subs)
 {
   //Function that finds the coefficients of the Lagrange polynomial
   /*
@@ -1903,24 +1903,24 @@ array<double> LagrangeP(int order, int node, array<double> & subs)
     */
   double range[] = {-1.0,1.0}; // range over which nodes are located
 
-  // xi: array with location of points where function is zero
+  // xi: hf_array with location of points where function is zero
 
-  array<double> xi = createEquispacedArray(range[0], range[1], order+1);
+  hf_array<double> xi = createEquispacedArray(range[0], range[1], order+1);
 
   int constInSubs = subs.get_dim(1); // location of the constant term in polynomial subs
   // this is just the last term of the polynomial
   // Constructing the polynomial
 
-  array<double> num;
-  num(0) = 1; // initalize this array to 1
+  hf_array<double> num;
+  num(0) = 1; // initalize this hf_array to 1
   // Do the same for the denominator
 
-  array<double> den;
-  den(0) = 1; // initalize this array to 1
+  hf_array<double> den;
+  den(0) = 1; // initalize this hf_array to 1
 
   // declare temporary variables
-  array<double> term;
-  array<double> tempConstant;
+  hf_array<double> term;
+  hf_array<double> tempConstant;
 
   for (int i = 0; i < order+1 ; i++)
     {
@@ -1943,7 +1943,7 @@ array<double> LagrangeP(int order, int node, array<double> & subs)
 }
 
 
-array<double> shapePoly4Tri(int in_index, int nNodesSide)
+hf_array<double> shapePoly4Tri(int in_index, int nNodesSide)
 {
   /*
     % returns the polynomial function T_I(r) in the polynomial format
@@ -1953,7 +1953,7 @@ array<double> shapePoly4Tri(int in_index, int nNodesSide)
     For specifics, refer to Hughes, pp 166
     */
 
-  array<double> T_I;// special lagrange polynomial corresponding to a node in the triangle
+  hf_array<double> T_I;// special lagrange polynomial corresponding to a node in the triangle
   // this is the result
 
   if(in_index == 1)
@@ -1967,13 +1967,13 @@ array<double> shapePoly4Tri(int in_index, int nNodesSide)
 
       double range[] = {-1.0,1.0}; // range over which nodes are located
 
-      // xi: array with location of points where function is zero
-      array<double> xi = createEquispacedArray(range[0], range[1], nNodesSide);
+      // xi: hf_array with location of points where function is zero
+      hf_array<double> xi = createEquispacedArray(range[0], range[1], nNodesSide);
 
       double r_I = xi(in_index-1); // get location of node in_index in the range
 
       // Create polynomial to substitute to create polynomial related to triangles
-      array<double> subs(1,2);
+      hf_array<double> subs(1,2);
       // Specify coefficient of r
       subs(0) = 2./(r_I + 1.);
       subs(1) = (1. - r_I)/(1. + r_I);
@@ -1986,9 +1986,9 @@ array<double> shapePoly4Tri(int in_index, int nNodesSide)
 }
 
 
-array<double> createEquispacedArray(double a, double b, int nPoints)
+hf_array<double> createEquispacedArray(double a, double b, int nPoints)
 {
-  array<double> xi(1,nPoints);
+  hf_array<double> xi(1,nPoints);
   for ( int i = 0; i < nPoints ; i++)
     {
       xi(i) = (i)/(double(nPoints)-1)*(b - a) + a;
@@ -1997,10 +1997,10 @@ array<double> createEquispacedArray(double a, double b, int nPoints)
 }
 
 
-array<double> addPoly(array<double> & p1, array<double> & p2)
+hf_array<double> addPoly(hf_array<double> & p1, hf_array<double> & p2)
 {
-  // Returns a 3D array; each layer represents a multiplication of polynomials
-  array<double> p3; // return polynomial
+  // Returns a 3D hf_array; each layer represents a multiplication of polynomials
+  hf_array<double> p3; // return polynomial
 
   // If any of the two is zero, return the other
   if (iszero(p1))   return p2;
@@ -2057,9 +2057,9 @@ array<double> addPoly(array<double> & p1, array<double> & p2)
 
 
 template <typename T>
-array<T> multPoly(array<T> & p1, array<T> & p2)
+hf_array<T> multPoly(hf_array<T> & p1, hf_array<T> & p2)
 {
-  array<T> p3; // return polynomial
+  hf_array<T> p3; // return polynomial
   if (iszero(p1) || iszero(p2))
     {
       p3(0) = 0;
@@ -2105,7 +2105,7 @@ array<T> multPoly(array<T> & p1, array<T> & p2)
 }
 
 template <typename T>
-bool iszero(array<T> & poly)
+bool iszero(hf_array<T> & poly)
 {
   // check if all contents of poly are zero
   int numDims = 4;
@@ -2132,23 +2132,23 @@ bool iszero(array<T> & poly)
 
 }
 
-array<double> nodeFunctionTri(int in_index, int in_n_spts, array<int> & index_location_array)
+hf_array<double> nodeFunctionTri(int in_index, int in_n_spts, hf_array<int> & index_location_hf_array)
 {
-  array<double> N_a; // Global node-specific shape function to be returned
+  hf_array<double> N_a; // Global node-specific shape function to be returned
 
   // Calculate number of nodes on each side
   int nNodesSide;
   nNodesSide =  calcNumSides(in_n_spts) ;
 
   // Get specific r,s,t index based on global index
-  int II = int(index_location_array(0,in_index));
-  int JJ = int(index_location_array(1,in_index));
-  int KK = int(index_location_array(2,in_index));
+  int II = int(index_location_hf_array(0,in_index));
+  int JJ = int(index_location_hf_array(1,in_index));
+  int KK = int(index_location_hf_array(2,in_index));
 
   //cout<< " II = "<<II<<" ; JJ = "<<JJ<<" ; KK = "<<KK<<endl;
 
   // Create polynomial functions specific to r,s,t nodes
-  array<double> T_Ir, T_Js, T_Kt, temp;
+  hf_array<double> T_Ir, T_Js, T_Kt, temp;
 
   T_Ir = shapePoly4Tri(II, nNodesSide);
   T_Js = shapePoly4Tri(JJ, nNodesSide);
@@ -2165,9 +2165,9 @@ array<double> nodeFunctionTri(int in_index, int in_n_spts, array<int> & index_lo
 }
 
 
-array<int> linkTriangleNodes(int in_n_spts)
+hf_array<int> linkTriangleNodes(int in_n_spts)
 {
-  // first row in index_location_array contains indeces of r arranged in ascending global node number;
+  // first row in index_location_hf_array contains indeces of r arranged in ascending global node number;
   // second row contains indeces of s arranged in ascending global node number;
   // third row contains indeces of t arranged in ascending global node number;
   // refer to Hughes pp 169 to see link between r/s indeces ordering and global indeces ordering
@@ -2175,14 +2175,14 @@ array<int> linkTriangleNodes(int in_n_spts)
   // Calculate number of nodes on each side
   int nNodesSide;
   nNodesSide =  calcNumSides(in_n_spts) ;
-  array<int> index_location_array; // Global node-specific shape function to be returned
+  hf_array<int> index_location_hf_array; // Global node-specific shape function to be returned
 
-  // Initialize arrays that will contain indices corresponding to node numbers
+  // Initialize hf_arrays that will contain indices corresponding to node numbers
   // Used temporarily to make code a bit clearer
-  array<int> rind(1,in_n_spts); // stores r indeces; location in array is global node number
-  array<int> sind(1,in_n_spts); // stores s indeces; location in array is global node number
-  array<int> tind(1,in_n_spts); // stores t indeces; location in array is global node number
-  array<int> temp; // temporary variable used while multiplying arrays
+  hf_array<int> rind(1,in_n_spts); // stores r indeces; location in hf_array is global node number
+  hf_array<int> sind(1,in_n_spts); // stores s indeces; location in hf_array is global node number
+  hf_array<int> tind(1,in_n_spts); // stores t indeces; location in hf_array is global node number
+  hf_array<int> temp; // temporary variable used while multiplying hf_arrays
 
   // Initialize counters
   int nNodesLeft = in_n_spts; // stores number of nodes left to assign
@@ -2213,7 +2213,7 @@ array<int> linkTriangleNodes(int in_n_spts)
           sind(lastInd + 2) = cycle + nSide;
           tind(lastInd + 2) = cycle + 1;
 
-          if(nNodesLeft == 3) break; //skip while loop and process arrays
+          if(nNodesLeft == 3) break; //skip while loop and process hf_arrays
         }
       else // this means there is 1 node left
         {
@@ -2221,7 +2221,7 @@ array<int> linkTriangleNodes(int in_n_spts)
           sind(lastInd) = cycle + 1;
           tind(lastInd) = cycle + 1;
 
-          break; //skip while loop and process arrays
+          break; //skip while loop and process hf_arrays
         }
 
       // go along the outer borders of triangle in this cycle
@@ -2251,29 +2251,29 @@ array<int> linkTriangleNodes(int in_n_spts)
       cycle++;
 
     }
-  // Process arrays: assemble them by stacking them: use multPoly function
+  // Process hf_arrays: assemble them by stacking them: use multPoly function
   // Order matters: r indeces go first, s indeces second, t indeces third
   temp = multPoly(rind,sind);
 
-  index_location_array = multPoly(temp,tind);
+  index_location_hf_array = multPoly(temp,tind);
 
-  return index_location_array;
+  return index_location_hf_array;
 
 }
 
 
-array<double> diffPoly(array<double> & p, array<int> & term2Diff)
+hf_array<double> diffPoly(hf_array<double> & p, hf_array<int> & term2Diff)
 {
   /*
-    Returns 3D array; differentiates polynomial p with respect to dimensions specified by term2Diff
-    term2Diff: n x 1 array of rows to differentiate (negative integer i differentiates row abs(i) and multiplies that row by -1 ); rows enumerated starting at 1
+    Returns 3D hf_array; differentiates polynomial p with respect to dimensions specified by term2Diff
+    term2Diff: n x 1 hf_array of rows to differentiate (negative integer i differentiates row abs(i) and multiplies that row by -1 ); rows enumerated starting at 1
     */
 
   int numTerms = term2Diff.get_dim(1); // find number of variables with respect to which to differentiate
   //cout<<"numTerms = "<<numTerms<<endl;
   int depthp = p.get_dim(2); // find number of layers of polynomial p (remember layers represent addition; rows multiplication; columns coefficients of polynomials)
 
-  array<double> finalp(1); // this is the polynomial that will be returned
+  hf_array<double> finalp(1); // this is the polynomial that will be returned
   finalp(0) = 0;  // initialize the polynomial
 
   // Declare variables used in the for loop
@@ -2281,7 +2281,7 @@ array<double> diffPoly(array<double> & p, array<int> & term2Diff)
   for(int l = 0; l < numTerms; l++)
     {
       // Create copy of p(:,:,1)
-      array<double> diffp;
+      hf_array<double> diffp;
       diffp = p;
 
       // Specify row to manipulate
@@ -2322,7 +2322,7 @@ array<double> diffPoly(array<double> & p, array<int> & term2Diff)
 }
 
 
-double evalPoly(array<double> p, array<double> coords)
+double evalPoly(hf_array<double> p, hf_array<double> coords)
 {
   //need to check that length of coords is equal to height of p
   if(p.get_dim(0) != coords.get_dim(1))
@@ -2364,14 +2364,14 @@ double evalPoly(array<double> p, array<double> coords)
 }
 
 
-void eval_dn_nodal_s_basis(array<double> &dd_nodal_s_basis,
-                           array<double> in_loc, int in_n_spts, int n_deriv)
+void eval_dn_nodal_s_basis(hf_array<double> &dd_nodal_s_basis,
+                           hf_array<double> in_loc, int in_n_spts, int n_deriv)
 {
   /*
     Function that returns the values of the nth derivatives of the shape function
     of nodes (rows in dd_nodal_s_basis) with respect to r and s (dr^n, ds^2, drds are in 1st, 2nd, 3rd
     columns respectively) given:
-    in_loc: 2x1 array of coordinates where derivatives are evaluated
+    in_loc: 2x1 hf_array of coordinates where derivatives are evaluated
     in_n_spts: number of nodes used to create triangle function ( n*(n+1)/2 where n is nodes on each
     side of the unit right triangle)
     n_deriv order of derivatives to take
@@ -2400,7 +2400,7 @@ void eval_dn_nodal_s_basis(array<double> &dd_nodal_s_basis,
 
 
   // Obtain linked list of node enumeration for triangle given the number of nodes in_n_spts
-  array<int> nodeList;
+  hf_array<int> nodeList;
   nodeList = linkTriangleNodes(in_n_spts);
 
   //cout<<"Linked list: "<<endl;
@@ -2408,13 +2408,13 @@ void eval_dn_nodal_s_basis(array<double> &dd_nodal_s_basis,
 
   // Start loop to find derivatives at each node
   // Shape function N_a of node a
-  array<double> N_a;
+  hf_array<double> N_a;
   // Differentiation of N_a
-  array<double> diff_N_a;
+  hf_array<double> diff_N_a;
   // Array that contains variables with respect to which shape function is differentiated
-  array<int> diff_coord(1,2);
-  // array that contains values of r,s,t to be plugged in when evaluating differentiated polynomial
-  array<double> coords(1,3);
+  hf_array<int> diff_coord(1,2);
+  // hf_array that contains values of r,s,t to be plugged in when evaluating differentiated polynomial
+  hf_array<double> coords(1,3);
   coords(0) = in_loc(0);
   coords(1) = in_loc(1);
   coords(2) = -1 - in_loc(0) - in_loc(1); // value of t given values of r, s : t = -1 -r -s
@@ -2461,7 +2461,7 @@ void eval_dn_nodal_s_basis(array<double> &dd_nodal_s_basis,
               diff_N_a = diffPoly(diff_N_a,diff_coord);
             }
 
-          // Evaluate differentiated shape function and store in array d_nodal_s_basis
+          // Evaluate differentiated shape function and store in hf_array d_nodal_s_basis
 
           dd_nodal_s_basis(a, (i==num_deriv_iterations-1 ? (i==0?0:1):(i==0? i:(i+1)))) = evalPoly(diff_N_a,coords);
         }
@@ -2479,9 +2479,9 @@ void eval_dn_nodal_s_basis(array<double> &dd_nodal_s_basis,
 //
 // From Numerical Recipes (http://www.nr.com/)
 //----------------------------------------------------------------------------
-void gaussj(int n, array<double>& A, array<double>& b)
+void gaussj(int n, hf_array<double>& A, hf_array<double>& b)
 {
-  array<int> indxc(n),indxr(n),ipiv(n);
+  hf_array<int> indxc(n),indxr(n),ipiv(n);
   int icol,irow,i,j,k,l,ll;
   double big,dum,pivinv;
 
@@ -2550,11 +2550,11 @@ void gaussj(int n, array<double>& A, array<double>& b)
     }
 }
 
-double flt_res(int N, array<double>& wf, array<double>& B, double k_0, double k_c, int ctype)
+double flt_res(int N, hf_array<double>& wf, hf_array<double>& B, double k_0, double k_c, int ctype)
 {
   int i;
   double norm, xm;
-  array<double> flt(N);
+  hf_array<double> flt(N);
   double flt_res=0.0;
 
   norm = 0.0;
@@ -2586,29 +2586,29 @@ double flt_res(int N, array<double>& wf, array<double>& B, double k_0, double k_
   return flt_res;
 }
 
-// Set an array to zero
-void zero_array(array <double>& in_array)
+// Set an hf_array to zero
+void zero_hf_array(hf_array <double>& in_hf_array)
 {
-  int dim_1_0 = in_array.get_dim(0);
-  int dim_1_1 = in_array.get_dim(1);
-  int dim_1_2 = in_array.get_dim(2);
-  int dim_1_3 = in_array.get_dim(3);
+  int dim_1_0 = in_hf_array.get_dim(0);
+  int dim_1_1 = in_hf_array.get_dim(1);
+  int dim_1_2 = in_hf_array.get_dim(2);
+  int dim_1_3 = in_hf_array.get_dim(3);
 
   for (int i=0;i<dim_1_0;++i) {
       for (int j=0;j<dim_1_1;++j) {
           for (int k=0;k<dim_1_2;++k) {
               for (int l=0;l<dim_1_3;++l) {
-                  in_array(i,j,k,l) = 0.0;
+                  in_hf_array(i,j,k,l) = 0.0;
                 }
             }
         }
     }
 }
 
-// Add arrays M1 and M2
-array <double> add_arrays(array <double>& M1, array <double>& M2)
+// Add hf_arrays M1 and M2
+hf_array <double> add_hf_arrays(hf_array <double>& M1, hf_array <double>& M2)
 {
-  // Get dimensions of arrays
+  // Get dimensions of hf_arrays
   int dim_1_0 = M1.get_dim(0);
   int dim_1_1 = M1.get_dim(1);
   int dim_1_2 = M1.get_dim(2);
@@ -2620,7 +2620,7 @@ array <double> add_arrays(array <double>& M1, array <double>& M2)
   int dim_2_3 = M2.get_dim(3);
 
   if(dim_1_0==dim_2_0 and dim_1_1==dim_2_1 and dim_1_2==dim_2_2 and dim_1_3==dim_2_3) {
-      array <double> sum(dim_1_0,dim_1_1,dim_1_2,dim_1_3);
+      hf_array <double> sum(dim_1_0,dim_1_1,dim_1_2,dim_1_3);
       for (int i=0;i<dim_1_0;++i) {
           for (int j=0;j<dim_1_1;++j) {
               for (int k=0;k<dim_1_2;++k) {
@@ -2633,14 +2633,14 @@ array <double> add_arrays(array <double>& M1, array <double>& M2)
     }
   else
     {
-      FatalError("array dimensions are not compatible in sum function");
+      FatalError("hf_array dimensions are not compatible in sum function");
     }
 }
 
 // Multiply M1(L*M) by M2(M*N)
-array <double> mult_arrays(array <double>& M1, array <double>& M2)
+hf_array <double> mult_hf_arrays(hf_array <double>& M1, hf_array <double>& M2)
 {
-  // Get dimensions of arrays
+  // Get dimensions of hf_arrays
   int dim_1_0 = M1.get_dim(0);
   int dim_1_1 = M1.get_dim(1);
   int dim_1_2 = M1.get_dim(2);
@@ -2651,11 +2651,11 @@ array <double> mult_arrays(array <double>& M1, array <double>& M2)
   int dim_2_2 = M2.get_dim(2);
   int dim_2_3 = M2.get_dim(3);
 
-  // Only 2D arrays
+  // Only 2D hf_arrays
   if(dim_1_2==1 and dim_1_3==1 and dim_2_2==1 and dim_2_3==1) {
       // Ensure consistent inner dimensions
       if(dim_1_1==dim_2_0) {
-          array <double> product(dim_1_0,dim_2_1);
+          hf_array <double> product(dim_1_0,dim_2_1);
 
 #if defined _ACCELERATE_BLAS || defined _MKL_BLAS || defined _STANDARD_BLAS
 
@@ -2677,52 +2677,52 @@ array <double> mult_arrays(array <double>& M1, array <double>& M2)
           return product;
         }
       else {
-          cout << "ERROR: array dimensions are not compatible in multiplication function" << endl;
+          cout << "ERROR: hf_array dimensions are not compatible in multiplication function" << endl;
           exit(1);
         }
     }
   else {
-      cout << "ERROR: Array multiplication function can only multiply 2-dimensional arrays together" << endl;
+      cout << "ERROR: Array multiplication function can only multiply 2-dimensional hf_arrays together" << endl;
       exit(1);
     }
 }
 
-// method to get transpose of a square array
-array <double> transpose_array(array <double>& in_array)
+// method to get transpose of a square hf_array
+hf_array <double> transpose_hf_array(hf_array <double>& in_hf_array)
 {
-  // Get dimensions of arrays
-  int dim_0 = in_array.get_dim(0);
-  int dim_1 = in_array.get_dim(1);
-  int dim_2 = in_array.get_dim(2);
-  int dim_3 = in_array.get_dim(3);
+  // Get dimensions of hf_arrays
+  int dim_0 = in_hf_array.get_dim(0);
+  int dim_1 = in_hf_array.get_dim(1);
+  int dim_2 = in_hf_array.get_dim(2);
+  int dim_3 = in_hf_array.get_dim(3);
 
-  // Only 2D square arrays
+  // Only 2D square hf_arrays
   if(dim_2==1 and dim_3==1 and dim_0==dim_1) {
       int i,j;
-      array <double> transpose(dim_1,dim_0);
+      hf_array <double> transpose(dim_1,dim_0);
 
       for(i=0;i<dim_0;i++) {
           for(j=0;j<dim_1;j++) {
-              transpose(j,i)=in_array(i,j);
+              transpose(j,i)=in_hf_array(i,j);
             }
         }
       return transpose;
     }
   else {
-      cout << "ERROR: Array transpose function only accepts a 2-dimensional square array" << endl;
+      cout << "ERROR: Array transpose function only accepts a 2-dimensional square hf_array" << endl;
       exit(1);
     }
 }
 
 // method to get inverse of a square matrix
 
-array <double> inv_array(array <double>& in_array)
+hf_array <double> inv_hf_array(hf_array <double>& in_hf_array)
 {
-  // Get dimensions of array
-  int dim_0 = in_array.get_dim(0);
-  int dim_1 = in_array.get_dim(1);
-  int dim_2 = in_array.get_dim(2);
-  int dim_3 = in_array.get_dim(3);
+  // Get dimensions of hf_array
+  int dim_0 = in_hf_array.get_dim(0);
+  int dim_1 = in_hf_array.get_dim(1);
+  int dim_2 = in_hf_array.get_dim(2);
+  int dim_3 = in_hf_array.get_dim(3);
 
   if(dim_2==1 and dim_3==1) {
       if(dim_0==dim_1)
@@ -2737,26 +2737,26 @@ array <double> inv_array(array <double>& in_array)
           double max;
           double dtemp_0;
           double first;
-          array <double> atemp_0(dim_0);
-          array <double> identity(dim_0,dim_0);
-          array <double> input(dim_0,dim_0);
-          array <double> inverse(dim_0,dim_0);
-          array <double> inverse_out(dim_0,dim_0);
-          array<int> swap_0(dim_0);
-          array<int> swap_1(dim_0);
+          hf_array <double> atemp_0(dim_0);
+          hf_array <double> identity(dim_0,dim_0);
+          hf_array <double> input(dim_0,dim_0);
+          hf_array <double> inverse(dim_0,dim_0);
+          hf_array <double> inverse_out(dim_0,dim_0);
+          hf_array<int> swap_0(dim_0);
+          hf_array<int> swap_1(dim_0);
 
-          // setup input array
+          // setup input hf_array
           for(i=0;i<dim_0;i++)
             for(j=0;j<dim_0;j++)
-              input(i,j) = in_array(i,j);
+              input(i,j) = in_hf_array(i,j);
 
-          // setup swap arrays
+          // setup swap hf_arrays
           for(i=0;i<dim_0;i++) {
               swap_0(i)=i;
               swap_1(i)=i;
             }
 
-          // setup identity array
+          // setup identity hf_array
           for(i=0;i<dim_0;i++) {
               for(j=0;j<dim_0;j++) {
                   identity(i,j)=0.0;
@@ -2780,7 +2780,7 @@ array <double> inv_array(array <double>& in_array)
                     }
                 }
 
-              // swap the swap arrays
+              // swap the swap hf_arrays
               itemp_0=swap_0(k);
               swap_0(k)=swap_0(pivot_i);
               swap_0(pivot_i)=itemp_0;
@@ -2845,7 +2845,7 @@ array <double> inv_array(array <double>& in_array)
           return inverse_out;
         }
       else {
-          cout << "ERROR: Can only obtain inverse of a square array" << endl;
+          cout << "ERROR: Can only obtain inverse of a square hf_array" << endl;
           exit(1);
         }
     }

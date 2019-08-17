@@ -112,7 +112,7 @@ cubature_tet::cubature_tet(int in_rule) // set by rule
     datfile.open(f, ifstream::in);
     if (!datfile) FatalError("Unable to open cubature file");
 
-    // read data from file to arrays
+    // read data from file to hf_arrays
     while(datfile.getline(buf,BUFSIZ))
     {
       sscanf(buf,"%s",section_TXT);
